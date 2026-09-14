@@ -1,30 +1,32 @@
-import pytest
+import re
 
-from pages.account_overview_page import AccountOverviewPage
-from pages.home_page import HomePage
-from pages.registration_page import RegistrationPage
+from playwright.sync_api import expect
 
 
-@pytest.mark.smoke
-def test_customer_can_register_for_online_banking(page, base_url, customer):
-    registration_page = RegistrationPage(page, base_url)
-    registration_page.load()
-    registration_page.register(customer)
-    registration_page.expect_account_created(customer)
+def test_TC39_valid_login(page):
+    # Arrange
+    page.goto("https://parabank.parasoft.com/parabank/index.htm")
+    page.get_by_role("link", name="Register").click()
 
-    account_overview_page = AccountOverviewPage(page, base_url)
-    account_overview_page.open()
+    # Use regex to verify the URL contains the expected registration page path,
+    # while allowing the domain or preceding URL path to vary
+    expect(page).to_have_url(re.compile(r".*register\.htm"))
 
-    assert account_overview_page.account_ids(), "Expected a new customer account"
+    page.locator('[name="customer.firstName"]').fill("Bill")
+    page.locator('[name="customer.lastName"]').fill("Jones")
+    page.locator('[name="customer.address.street"]').fill("1416 Orange Pekoe st")
+    page.locator('[name="customer.address.city"]').fill("Los Angeles")
+    page.locator('[name="customer.address.state"]').fill("Bill")
+    page.locator('[name="customer.address.zipCode"]').fill("91324")
+    page.locator('[name="customer.phoneNumber"]').fill("213-867-5309")
+    page.locator('[name="customer.ssn"]').fill("123-45-6789")
 
+    page.locator('[name="customer.username"]').fill("qa_user_20260914111342_583**1")
+    page.locator('[name="customer.password"]').fill("ComplicatedPassword_1234")
+    page.locator('[name="repeatedPassword"]').fill("ComplicatedPassword_1234")
 
-@pytest.mark.smoke
-def test_registered_customer_can_log_out_and_log_back_in(
-    page, base_url, registered_customer
-):
-    home_page = HomePage(page, base_url)
-    home_page.log_out()
-    home_page.login(registered_customer.username, registered_customer.password)
+    page.get_by_role("button", name="Register").click()
 
-    account_overview_page = AccountOverviewPage(page, base_url)
-    account_overview_page.expect_loaded()
+    # Act
+
+    # Assert

@@ -216,3 +216,11 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+data/active_user.json
+
+# Local IDE settings and generated test evidence
+.idea/
+reports/
+test-results/
+results.xml

@@ -1,3 +1,4 @@
+import json
 import re
 import uuid
 
@@ -13,7 +14,7 @@ def test_register_new_user(page: Page):
     # Use regex so the assertion focuses on the expected registration page path
     expect(page).to_have_url(re.compile(r".*register\.htm"))
 
-    # Generate a unique username for each test run
+    # Generate a unique username for each registration run
     username = f"qa{uuid.uuid4().hex[:12]}"
     password = "Test1234"
 
@@ -34,16 +35,31 @@ def test_register_new_user(page: Page):
 
     page.get_by_role("button", name="Register").click()
 
-    # Print ParaBank's response
+    # Print ParaBank's response for troubleshooting
     response_text = page.locator("#rightPanel").inner_text()
     print(response_text)
 
-    # Assert
+    # Assert registration succeeded
     expect(page.locator("#rightPanel")).to_contain_text(
         "Your account was created successfully."
     )
 
-    expect(page.locator("#leftPanel")).to_contain_text("Accounts Overview")
+    # Confirm the new user is logged in
+    expect(page.locator("#leftPanel")).to_contain_text(
+        "Accounts Overview"
+    )
 
-    print(f"\nSuccessfully created account: {username}")
-    print(username)
+    # Save the working credentials for future login tests
+    with open("data/active_user.json", "w") as file:
+        json.dump(
+            {
+                "username": username,
+                "password": password
+            },
+            file,
+            indent=4
+        )
+
+    print("\nSuccessfully created and saved account")
+    print(f"Username: {username}")
+    print(f"Password: {password}")
