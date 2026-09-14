@@ -10,8 +10,8 @@ There are five active UI test functions across three files:
 
 | File | Current behavior | Status |
 | --- | --- | --- |
-| [test_TC-39_account_creation.py](tests/ui/test_TC-39_account_creation.py) | Registers a customer with a unique username, checks the success message and account-services sidebar, then saves credentials to `data/active_user.json`. | Registration checks implemented using direct Playwright calls. |
-| [test_TC39_valid_login.py](tests/ui/test_TC39_valid_login.py) | Opens registration and submits a form with a fixed username. | Unfinished: the login action and outcome assertions still need to be written. |
+| [test_TC-39_account_creation.py](tests/ui/test_TC-44_new_ user_account_creation.py) | Registers a customer with a unique username, checks the success message and account-services sidebar, then saves credentials to `data/active_user.json`. | Registration checks implemented using direct Playwright calls. |
+| [test_TC39_valid_login.py](tests/ui/test_TC-39_valid_login.py) | Opens registration and submits a form with a fixed username. | Unfinished: the login action and outcome assertions still need to be written. |
 | [test_account_services.py](tests/ui/test_account_services.py) | Contains three scenarios: opening a savings account, transferring funds, and paying a bill. | Uses page objects and fresh-customer fixtures; marked `regression`. |
 
 The savings-account test checks for a new account ID. The transfer test checks the confirmation amount and source/destination IDs. The bill-payment test checks the confirmation payee and amount. These checks do not yet verify resulting balances.
