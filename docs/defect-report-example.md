@@ -1,5 +1,8 @@
 # Defect Report Example
 
+Illustrative example only. The steps and evidence names below are placeholders,
+not a confirmed defect from the current automated test suite.
+
 ## Summary
 
 Transfer confirmation displays the wrong destination account after submitting a valid funds transfer.

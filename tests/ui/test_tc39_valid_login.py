@@ -12,7 +12,8 @@ GREEN = "\033[1;32m"
 RESET = "\033[0m"
 
 
-def test_TC39_valid_login(page: Page) -> None:
+def test_tc39_valid_login(page: Page) -> None:
+    """Log in with the saved credentials and verify account access."""
     credentials_path = Path(__file__).resolve().parents[2] / "data" / "active_user.json"
     with credentials_path.open(encoding="utf-8") as file:
         credentials = json.load(file)

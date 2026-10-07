@@ -1,2 +1,2 @@
-# pytest configuration and fixtures
-# Add shared fixtures here for browser, page, and other test utilities
+# Placeholder for future shared pytest fixtures.
+# The active UI tests use the page fixture supplied by pytest-playwright.

@@ -13,7 +13,7 @@ GREEN = "\033[1;32m"
 RESET = "\033[0m"
 
 
-def test_register_new_user(page: Page):
+def test_tc44_new_user_account_creation(page: Page) -> None:
     """Register a customer, verify success and login, then save the credentials."""
     # Expected-result messages describe the scenario; expect() calls enforce checks.
     # Arrange: open the registration form before preparing fresh credentials.
