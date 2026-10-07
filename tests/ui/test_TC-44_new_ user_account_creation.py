@@ -5,16 +5,28 @@ import uuid
 from playwright.sync_api import Page, expect
 
 
+# Terminal colors. RESET returns the text to its normal appearance.
+BLUE = "\033[1;34m"
+CYAN = "\033[36m"
+DIM = "\033[2m"
+GREEN = "\033[1;32m"
+RESET = "\033[0m"
+
+
 def test_register_new_user(page: Page):
     """Register a customer, verify success and login, then save the credentials."""
     # Expected-result messages describe the scenario; expect() calls enforce checks.
     # Arrange: open the registration form before preparing fresh credentials.
-    print("\nStep 1: Navigate to the ParaBank login page.")
-    print("Expected result: ParaBank login page loads successfully.")
+    print(f"\n{BLUE}=================================================={RESET}")
+    print(f"{BLUE}           ◆ TC-44: ACCOUNT CREATION{RESET}")
+    print(f"{BLUE}=================================================={RESET}")
+
+    print(f"\n{CYAN}› [1] Open the login page{RESET}")
+    print(f"{DIM}    ↳ Expected: ParaBank login page is visible.{RESET}")
     page.goto("https://parabank.parasoft.com/parabank/index.htm")
 
-    print("\nStep 2: Click Register.")
-    print("Expected result: Customer Registration page is displayed.")
+    print(f"\n{CYAN}› [2] Click Register{RESET}")
+    print(f"{DIM}    ↳ Expected: Customer Registration is displayed.{RESET}")
     page.get_by_role("link", name="Register").click()
 
     # Check the registration path without tying the assertion to the full site URL.
@@ -25,8 +37,8 @@ def test_register_new_user(page: Page):
     password = "Test1234"
 
     # Act: use fixed sample customer data so only the username changes between runs.
-    print("\nStep 3: Enter valid customer information in the required personal and address fields.")
-    print("Expected result: Customer information is accepted in the corresponding fields.")
+    print(f"\n{CYAN}› [3] Enter customer information{RESET}")
+    print(f"{DIM}    ↳ Expected: Personal and address fields are filled.{RESET}")
     page.locator('[name="customer.firstName"]').fill("Anton")
     page.locator('[name="customer.lastName"]').fill("Tester")
     page.locator('[name="customer.address.street"]').fill("123 Test Street")
@@ -36,32 +48,31 @@ def test_register_new_user(page: Page):
     page.locator('[name="customer.phoneNumber"]').fill("2065551234")
     page.locator('[name="customer.ssn"]').fill("123456789")
 
-    print(f"\nStep 4: Enter a unique username in the Username field: {username}")
-    print("Expected result: Username is accepted in the field.")
+    print(f"\n{CYAN}› [4] Enter a unique username{RESET}")
+    print(f"{DIM}    ↳ Expected: Username appears in the field.{RESET}")
+    print(f"{DIM}    ↳ Username: {username}{RESET}")
     page.locator('[name="customer.username"]').fill(username)
 
-    print("\nStep 5: Enter a valid password in the Password field.")
-    print("Expected result: Password is accepted and masked.")
+    print(f"\n{CYAN}› [5] Enter the password{RESET}")
+    print(f"{DIM}    ↳ Expected: Password is entered and masked.{RESET}")
     page.locator('[name="customer.password"]').fill(password)
 
     # Reuse the password variable so the confirmation matches the original entry.
-    print("\nStep 6: Enter the same password in the Confirm Password field.")
-    print("Expected result: Password confirmation is accepted and masked.")
+    print(f"\n{CYAN}› [6] Confirm the password{RESET}")
+    print(f"{DIM}    ↳ Expected: Both password fields match.{RESET}")
     page.locator('[name="repeatedPassword"]').fill(password)
 
-    print("\nStep 7: Click Register to submit the registration.")
-    print("Expected result: Registration is submitted successfully.")
+    print(f"\n{CYAN}› [7] Submit registration{RESET}")
+    print(f"{DIM}    ↳ Expected: Registration request is submitted.{RESET}")
     page.get_by_role("button", name="Register").click()
 
-    print("\nStep 8: Verify the registration success message is displayed.")
-    print(
-        "Expected result: A welcome message and confirmation that the account "
-        "was created successfully are displayed."
-    )
+    print(f"\n{CYAN}› [8] Check the registration confirmation{RESET}")
+    print(f"{DIM}    ↳ Expected: Account creation is confirmed.{RESET}")
 
     # Include the server response in captured test output to help diagnose failures.
     response_text = page.locator("#rightPanel").inner_text()
-    print(response_text)
+    print(f"{DIM}    ↳ Response:{RESET}")
+    print(DIM + "      " + response_text.replace("\n", "\n      ") + RESET)
 
     # Wait for the success text before treating registration as successful.
     expect(page.locator("#rightPanel")).to_contain_text(
@@ -69,11 +80,8 @@ def test_register_new_user(page: Page):
     )
 
     # Use Accounts Overview in the sidebar as the check for authenticated navigation.
-    print("\nStep 9: Verify the newly registered customer is logged in.")
-    print(
-        "Expected result: Authenticated customer navigation, account services, "
-        "and logout options are displayed."
-    )
+    print(f"\n{CYAN}› [9] Check authentication{RESET}")
+    print(f"{DIM}    ↳ Expected: Accounts Overview navigation is visible.{RESET}")
     expect(page.locator("#leftPanel")).to_contain_text(
         "Accounts Overview"
     )
@@ -89,7 +97,9 @@ def test_register_new_user(page: Page):
             indent=4
         )
 
-    print("\nSuccessfully created and saved account")
-    print(f"Username: {username}")
+    print(f"\n{GREEN}--------------------------------------------------{RESET}")
+    print(f"{GREEN}✓ PASS: Account created and credentials saved.{RESET}")
+    print(f"{GREEN}--------------------------------------------------{RESET}")
+    print(f"{DIM}    ↳ Username: {username}{RESET}")
     # The password is saved in the credentials file but kept out of console output.
-    print("Password: [hidden]")
+    print(f"{DIM}    ↳ Password: [hidden]{RESET}")

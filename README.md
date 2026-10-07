@@ -2,21 +2,18 @@
 
 A developing QA automation portfolio built with Python, Playwright, and pytest. The current focus is practicing browser automation against ParaBank while building reusable page objects, test fixtures, and QA documentation.
 
-**Status: work in progress.** This README describes the code currently in the repository. Some scenarios are implemented, others are unfinished, and several directories are reserved for future work. The project does not currently claim a fully passing or complete test suite.
+**Status: work in progress.** Registration and valid-login scenarios are implemented. Page objects, reusable fixtures, and placeholder directories support further development. Implemented coverage does not imply a verified passing run against the public demo site.
 
 ## Current Implementation
 
-There are five active UI test functions across three files:
+There are two active UI test functions across two files:
 
 | File | Current behavior | Status |
 | --- | --- | --- |
-| [test_TC-39_account_creation.py](tests/ui/test_TC-44_new_ user_account_creation.py) | Registers a customer with a unique username, checks the success message and account-services sidebar, then saves credentials to `data/active_user.json`. | Registration checks implemented using direct Playwright calls. |
-| [test_TC39_valid_login.py](tests/ui/test_TC-39_valid_login.py) | Opens registration and submits a form with a fixed username. | Unfinished: the login action and outcome assertions still need to be written. |
-| [test_account_services.py](tests/ui/test_account_services.py) | Contains three scenarios: opening a savings account, transferring funds, and paying a bill. | Uses page objects and fresh-customer fixtures; marked `regression`. |
+| [test_TC-44_new_ user_account_creation.py](tests/ui/test_TC-44_new_%20user_account_creation.py) | Registers a customer with a unique username, checks the success message and account-services sidebar, then saves credentials to `data/active_user.json`. | Uses pytest's `page` fixture and direct Playwright calls. |
+| [test_TC-39_valid_login.py](tests/ui/test_TC-39_valid_login.py) | Reads the saved username and password, fills the login form, submits it, and checks that the URL is `https://parabank.parasoft.com/parabank/overview.htm`. | Uses pytest's `page` fixture; requires an existing valid account in the JSON file. |
 
-The savings-account test checks for a new account ID. The transfer test checks the confirmation amount and source/destination IDs. The bill-payment test checks the confirmation payee and amount. These checks do not yet verify resulting balances.
-
-Login and logout helpers exist in `HomePage`, but the active login-named test does not currently use them. A passing result from that unfinished test would not prove that login works.
+Page objects for login, registration, account overview, opening accounts, transfers, and bill payments remain available in `pages/`. The two active tests currently use direct browser interactions.
 
 ## Technology and Setup
 
@@ -44,35 +41,42 @@ In PyCharm, select the project's `.venv\Scripts\python.exe` as the interpreter a
 
 ## Running the Current Tests
 
-The page-object tests require a base URL. [pytest.ini](pytest.ini) does not currently provide one, so include the ParaBank application path when running the suite:
+Run these commands from the repository root. First register an account to populate `data/active_user.json`, then run the login test:
 
 ```powershell
-# All current tests, including the unfinished login-named test
-.\.venv\Scripts\python.exe -m pytest --base-url https://parabank.parasoft.com/parabank/
+# TC-44: create an account and save its credentials
+.\.venv\Scripts\python.exe -m pytest "tests/ui/test_TC-44_new_ user_account_creation.py"
 
-# The three account-service scenarios
-.\.venv\Scripts\python.exe -m pytest -m regression --base-url https://parabank.parasoft.com/parabank/
-
-# Standalone registration; successful execution replaces active_user.json
-.\.venv\Scripts\python.exe -m pytest "tests/ui/test_TC-39_account_creation.py"
+# TC-39: log in using the saved credentials
+.\.venv\Scripts\python.exe -m pytest "tests/ui/test_TC-39_valid_login.py"
 
 # Inspect discovery without executing browser workflows
 .\.venv\Scripts\python.exe -m pytest --collect-only -q
 ```
 
-Both TC39-related scripts hardcode the public ParaBank URL. Changing `--base-url` currently affects only the page-object flows.
+The registration filename contains a space after `new_`, so keep the quotes around its path. Both files are pytest tests; use `-m pytest` to supply the `page` fixture and run their assertions.
+
+To run both scenarios in one command with fresh credentials, specify registration before login and stop if registration fails:
+
+```powershell
+.\.venv\Scripts\python.exe -m pytest -x "tests/ui/test_TC-44_new_ user_account_creation.py" "tests/ui/test_TC-39_valid_login.py"
+```
+
+The login test does not automatically run registration. A plain `pytest` run discovers both files but does not establish this dependency; prepare valid saved credentials first or use the ordered command above.
+
+Both active tests hardcode the public ParaBank URL, so they do not require `--base-url`. The reusable page objects accept a base URL for future tests.
 
 The execution defaults are verbose output, short tracebacks, a visible Chromium browser, and a 500 ms action delay (`--headed --slowmo 500`).
 
 ```powershell
 # Select Firefox after installing its browser binary
-.\.venv\Scripts\python.exe -m pytest --browser firefox --base-url https://parabank.parasoft.com/parabank/
+.\.venv\Scripts\python.exe -m pytest "tests/ui/test_TC-39_valid_login.py" --browser firefox
 
 # Replace the demo defaults for headless execution without the action delay
-.\.venv\Scripts\python.exe -m pytest -o "addopts=-v --tb=short" --base-url https://parabank.parasoft.com/parabank/
+.\.venv\Scripts\python.exe -m pytest "tests/ui/test_TC-39_valid_login.py" -o "addopts=-v --tb=short"
 ```
 
-The configuration registers `ui`, `api`, `integration`, `smoke`, and `regression` markers. Only `regression` is currently applied to active tests. Consequently, `-m smoke` and `-m ui` select no tests; select `tests/ui` by path to run the UI directory.
+The configuration registers `ui`, `api`, `integration`, `smoke`, and `regression` markers. Neither active test currently has a marker, so filtering with these markers selects no tests. Select tests by file path instead.
 
 ## Architecture and Project Structure
 
@@ -80,14 +84,13 @@ The configuration registers `ui`, `api`, `integration`, `smoke`, and `regression
 pages/                       Page objects and shared navigation/assertion helpers
 tests/
     ui/
-        conftest.py          Customer and registered-customer fixtures
-        test_TC-39_account_creation.py
-        test_TC39_valid_login.py
-        test_account_services.py
+        conftest.py          Reusable customer and registered-customer fixtures
+        test_TC-39_valid_login.py
+        test_TC-44_new_ user_account_creation.py
     api/                     Placeholder
     integration/             Placeholder
 data/
-    active_user.json         Saved demo credentials from standalone registration
+    active_user.json         Credentials saved by TC-44 and read by TC-39
     user_data.py             Separate generator, not currently used by tests
 utils/test_data.py           Customer/Payee models and synthetic data generators
 api/                         Placeholder for future API clients
@@ -100,26 +103,28 @@ requirements.txt             Pinned dependencies
 LICENSE                      CC0 1.0 Universal
 ```
 
-The account-service tests use the Page Object Model: tests express workflows, while page classes contain locators, browser actions, and UI checks. The two TC39-related scripts still contain direct browser interactions.
+The page objects group locators, browser actions, and UI checks for reuse. The current registration and login tests have not yet been migrated to those helpers.
 
-The function-scoped `customer` fixture generates a customer with a timestamp and random username suffix. `registered_customer` registers that customer through the UI and checks registration success before returning it. Bill-payment data comes from `sample_payee()`. Browser and page fixtures come from pytest-playwright.
+The function-scoped `customer` fixture generates a customer with a timestamp and random username suffix. `registered_customer` registers that customer through the UI and checks registration success before returning it. These fixtures and the `sample_payee()` generator are available for future tests. The active tests use the `page` fixture from pytest-playwright, which manages browser setup and cleanup.
 
 The unused generator and placeholder directories represent work that has not yet been connected to the active suite.
 
 ## Test Data and Saved Credentials
 
-`data/active_user.json` contains `username` and `password`. The standalone registration test replaces it after successful assertions. It is intended for future reuse, but **no active test currently reads it**, including the login-named test.
+`data/active_user.json` contains the `username` (UID) and `password` fields. TC-44 replaces it after the registration-success and account-navigation assertions pass. TC-39 reads both values with `json.load()` and fills the login form with them.
 
-Account-service tests create their own customers through fixtures. They do not depend on the saved JSON account, and a saved record does not guarantee that an account still exists on the shared demo site.
+The login test resolves the JSON path relative to its own file, so reading the credentials does not depend on the terminal's working directory. Registration writes to `data/active_user.json` relative to the working directory, so run registration from the repository root.
 
-The registration script currently stores demo credentials in plaintext and prints them in its output. Use synthetic test data. Although the JSON path is listed in `.gitignore`, the file is already tracked by Git; the ignore entry does not stop changes to that tracked file from being committed.
+If the file is missing or the saved account no longer exists on the shared demo site, rerun TC-44 successfully before TC-39. Editing the JSON alone does not create an account on ParaBank.
+
+Registration prints the username and displays `Password: [hidden]`; the password is stored in the JSON file. Although the JSON path is listed in `.gitignore`, the file is already tracked by Git, so updates can still appear in `git status`. Use synthetic demo credentials only.
 
 ## Reporting and QA Documentation
 
 pytest provides console results. To generate a JUnit report and retain failure evidence:
 
 ```powershell
-.\.venv\Scripts\python.exe -m pytest --base-url https://parabank.parasoft.com/parabank/ --junitxml=reports/junit.xml --tracing retain-on-failure --screenshot only-on-failure
+.\.venv\Scripts\python.exe -m pytest -x "tests/ui/test_TC-44_new_ user_account_creation.py" "tests/ui/test_TC-39_valid_login.py" --junitxml=reports/junit.xml --tracing retain-on-failure --screenshot only-on-failure
 ```
 
 The XML report goes to `reports/junit.xml`; Playwright artifacts go to `test-results/`. These generated directories are ignored by Git. Traces and automatic screenshots are off unless enabled. No HTML dashboard, automated upload, or GitHub Actions workflow is configured.
@@ -132,7 +137,9 @@ Testiny is a future consideration mentioned in the intended workflow. It is not 
 
 ## Current Limitations and Next Steps
 
-- Complete the login scenario and its assertions; the fixed registration username can collide on repeat runs.
+- Add authenticated-page content checks to complement the login URL assertion.
+- Remove the manual registration prerequisite by defining a reusable saved-account setup workflow.
+- Add account-service tests using the existing page objects.
 - Consolidate direct browser scripts, page objects, and data generation as the framework develops.
 - Centralize the application URL and apply markers consistently.
 - Improve synchronization and validate the current workflows before recording a passing baseline.
