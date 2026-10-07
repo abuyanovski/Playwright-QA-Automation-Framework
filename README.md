@@ -2,7 +2,7 @@
 
 A QA automation portfolio built with Python, Playwright, and pytest. The current focus is three browser tests against the public ParaBank demo: customer registration, valid login, and invalid login.
 
-**Status: work in progress.** These scenarios have automated actions and assertions. Their presence does not establish a fully passing baseline against the shared demo site.
+**Status: work in progress.** Three UI tests run in GitHub Actions. TC-40 detects a [known ParaBank login defect](#known-parabank-defect) that causes the CI run to fail.
 
 ## Current Tests
 
@@ -14,7 +14,15 @@ A QA automation portfolio built with Python, Playwright, and pytest. The current
 
 Each login test currently uses one credential combination. The printed Step 8 is a manual repeat reminder; additional data variations and missing-field cases are not automated yet.
 
-TC-40 expects rejection. A previous local run of the public demo opened Accounts Overview after incorrect credentials were submitted, so a failing rejection check needs investigation.
+### Known ParaBank Defect
+
+In the [October 7, 2026 CI run](https://github.com/abuyanovski/Playwright-QA-Automation-Framework/actions/runs/37704360018), TC-44 registration and TC-39 valid login passed. TC-40 invalid login failed, giving a result of **2 passed, 1 failed**.
+
+- **Expected:** Incorrect credentials are rejected, a login error appears, and account information stays hidden.
+- **Actual:** After submitting a username and password with `_invalid` appended, the page displayed “Welcome Anton Tester,” Accounts Overview, Log Out, and account balances.
+- **Failure:** The assertion in [TC-40](tests/ui/test_tc40_invalid_login.py) expected `#loginPanel` to be visible, but the element was missing.
+
+The workflow completed setup and ran all three tests. Its failed status correctly reports the application defect. TC-40 keeps its rejection assertions so the same test can verify the fix when ParaBank's behavior is corrected.
 
 ## Project Structure and Cleanup
 
@@ -24,7 +32,8 @@ Directories reserved for future work contain only `.gitkeep` placeholders. Their
 
 ```text
 .github/
-    workflows/.gitkeep                  Future CI workflows
+    workflows/
+        playwright-tests.yml           GitHub Actions UI test workflow
 api/.gitkeep                            Future API clients
 data/
     active_user.json                    Saved demo credentials
@@ -44,6 +53,7 @@ tests/
     api/.gitkeep                        Future API tests
     integration/.gitkeep                Future integration tests
 utils/.gitkeep                          Future shared helpers
+AGENTS.md                               Project writing guidelines
 conftest.py                             Placeholder for shared pytest fixtures
 pytest.ini                              Discovery, markers, browser defaults
 requirements.txt                        Active dependency pins
@@ -96,7 +106,7 @@ To run all three in registration-first order and stop at the first failure:
     tests/ui/test_tc40_invalid_login.py
 ```
 
-A plain `pytest` run discovers all three tests but does not arrange their credential dependency. Prepare saved credentials first or use the ordered command above.
+A plain `pytest` run discovers all three tests but doesn't automatically run registration first. Prepare saved credentials first or use the ordered command above.
 
 To inspect discovery without opening browsers:
 
@@ -114,6 +124,17 @@ If an existing PyCharm run configuration points to an old filename, recreate it 
 ```
 
 The `ui`, `api`, `integration`, `smoke`, and `regression` markers are registered for future use. No active test has a marker yet; select tests by path.
+
+## Continuous Integration
+
+The [Playwright Tests workflow](.github/workflows/playwright-tests.yml) runs on pushes to `main`, pull requests targeting `main`, and manual runs from the GitHub Actions tab.
+
+- Uses Ubuntu and Python 3.12.
+- Installs the pinned Python dependencies, Chromium, and its system dependencies.
+- Runs TC-44, TC-39, and TC-40 in that order so registration creates fresh credentials before the login tests.
+- Runs Chromium headlessly, removes the local action delay, displays printed steps, and stops at the first failure.
+
+Results are available in the workflow's **Run Playwright tests** log. The known TC-40 defect is documented above.
 
 ## Console Output
 
@@ -144,7 +165,7 @@ pytest supplies console results. For a login report and failure evidence after p
     --junitxml=reports/junit.xml --tracing retain-on-failure --screenshot only-on-failure
 ```
 
-Generated reports and Playwright artifacts are ignored by Git. Traces and screenshots require the options above. The CI directory is a placeholder; automated uploads and Testiny integration are planned.
+Generated reports and Playwright artifacts are ignored by Git. The command above creates local failure evidence. The current CI workflow provides console logs; report generation, trace and screenshot capture, artifact uploads, and Testiny integration are planned for CI.
 
 - [Test strategy](docs/test-strategy.md): implemented approach and future scope.
 - [Test cases](docs/test-cases.md): three current scenarios and planned coverage.
@@ -156,8 +177,7 @@ Generated reports and Playwright artifacts are ignored by Git. Traces and screen
 - Make the saved-account prerequisite part of test setup.
 - Add logout, account-service scenarios, and balance assertions.
 - Introduce page objects and shared helpers when tests need them.
-- Develop API, integration, and CI capabilities in their placeholder directories.
-
-Tests depend on the availability and state of the shared ParaBank demo. Investigate failures before recording a passing baseline.
+- Develop API and integration tests in their placeholder directories.
+- Add CI reports and failure-artifact uploads.
 
 See [LICENSE](LICENSE) for the CC0 1.0 Universal terms.
