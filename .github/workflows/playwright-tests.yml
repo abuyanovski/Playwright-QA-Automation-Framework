@@ -26,10 +26,18 @@ jobs:
           pip install -r requirements.txt
           python -m playwright install --with-deps chromium
 
-      - name: Run Playwright tests
+      - name: Register a fresh customer
         run: |
-          python -m pytest -s -x \
+          python -m pytest -s \
             tests/ui/test_tc44_new_user_account_creation.py \
+            -o "addopts=-v --tb=short"
+
+      - name: Run login and account-service tests
+        run: |
+          python -m pytest -s \
             tests/ui/test_tc39_valid_login.py \
+            tests/ui/test_tc45_open_new_savings.py \
+            tests/ui/test_tc46_tx_funds_between_accounts.py \
+            tests/ui/test_tc42_val_billpay_invalid_amount.py \
             tests/ui/test_tc40_invalid_login.py \
             -o "addopts=-v --tb=short"
